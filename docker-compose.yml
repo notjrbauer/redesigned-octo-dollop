@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  payment_1:
+    image: nginx
+    labels:
+      app_name: payment
+      env: production
+    ports:
+      - 80
+  payment_2:
+    image: nginx
+    labels:
+      app_name: payment
+      env: production
+    ports:
+      - 80
+  payment_3:
+    image: nginx
+    labels:
+      app_name: payment
+      env: production
+    ports:
+      - 80
+  orders_1:
+    image: nginx
+    labels:
+      app_name: orders
+      env: production
+    ports:
+      - 80
+  orders_2:
+    image: nginx
+    labels:
+      app_name: orders
+      env: production
+    ports:
+      - 80
+  orders_3:
+    image: nginx
+    labels:
+      app_name: orders
+      env: production
+    ports:
+      - 80
+  orphan:
+    image: nginx
+    labels:
+      app_name: orphan
+      env: production
+    ports:
+      - 80
