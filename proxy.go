@@ -93,20 +93,16 @@ func (p *Proxy) Listen(port int) {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
 	}
 
-	t := stats{p.Stats}
-	http.Handle("/stats", &t)
+	http.Handle("/stats", &stats{p.Stats})
 
+	// middleware time
 	tr := tracing(nextRequestID)
 	lh := logging(p.log)
-	x := tr(lh(p))
-	http.Handle("/", x)
-	//tracingLogger := tr(lh(http.HandlerFunc(p.proxy)))
-	//server := http.Server{
-	//Addr:    fmt.Sprintf(":%d", port),
-	//Handler: tracingLogger,
-	//}
+	tracingLoggerProxy := tr(lh(p))
+	http.Handle("/", tracingLoggerProxy)
+
+	// serve
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
-	// server.ListenAndServe()
 }
 
 type status int
@@ -127,11 +123,14 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if service != "" {
 		if _, ok := p.routeMap[service]; ok {
+
 			tmp := addr.Path
 			addr.Path = ""
 			dst = p.open(addr)
 			r.URL = addr
 			addr.Path = tmp
+
+			// hook fire after response sent.
 			dst.ModifyResponse = func(resp *http.Response) (err error) {
 				if resp.StatusCode > 399 {
 					p.Stats.IncError()
@@ -147,6 +146,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// fallthrough
 	http.Error(w, p.defaultBody, p.defaultStatus)
 	p.Stats.IncError()
 	return
